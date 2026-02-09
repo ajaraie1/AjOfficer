@@ -1,0 +1,28 @@
+# General
+.DS_Store
+.idea/
+.vscode/
+*.log
+*.sqlite
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.env
+.env.local
+
+# Python
+venv/
+env/
+.pytest_cache/
+
+# Mobile (Flutter/React Native common)
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/

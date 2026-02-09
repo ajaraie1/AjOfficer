@@ -1,0 +1,48 @@
+name: igams_mobile
+description: IGAMS Mobile App - Daily Operations & Measurement Input
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # HTTP & API
+  dio: ^5.4.0
+  
+  # Local Storage
+  sqflite: ^2.3.2
+  path_provider: ^2.1.2
+  shared_preferences: ^2.2.2
+  
+  # UI
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  
+  # Date/Time
+  intl: ^0.18.1
+  
+  # Utils
+  connectivity_plus: ^5.0.2
+  json_annotation: ^4.8.1
+  uuid: ^4.3.3
+  path: ^1.8.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.8
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/

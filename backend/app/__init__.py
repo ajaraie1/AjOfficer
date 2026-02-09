@@ -1,0 +1,1 @@
+"""IGAMS Backend Application."""
