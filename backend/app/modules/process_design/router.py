@@ -133,6 +133,21 @@ async def add_step(
     return step
 
 
+@router.get("/{process_id}/steps", response_model=List[ProcessStep])
+async def get_process_steps(
+    process_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all steps for a process."""
+    process = await service.get_process_by_id(db, process_id)
+    if not process:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Process not found")
+    
+    steps = await service.get_steps_for_process(db, process_id)
+    return steps
+
+
 @router.patch("/steps/{step_id}", response_model=ProcessStep)
 async def update_step(
     step_id: str,

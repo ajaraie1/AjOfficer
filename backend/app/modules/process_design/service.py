@@ -120,6 +120,16 @@ async def add_step_to_process(db: AsyncSession, process_id: str, step_data: Proc
     return step
 
 
+async def get_steps_for_process(db: AsyncSession, process_id: str) -> List[ProcessStepModel]:
+    """Get all steps for a process ordered by sequence."""
+    result = await db.execute(
+        select(ProcessStepModel)
+        .where(ProcessStepModel.process_id == process_id)
+        .order_by(ProcessStepModel.sequence_order)
+    )
+    return result.scalars().all()
+
+
 async def get_step_by_id(db: AsyncSession, step_id: str) -> Optional[ProcessStepModel]:
     """Get a step by ID."""
     result = await db.execute(
