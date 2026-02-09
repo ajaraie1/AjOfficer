@@ -5,17 +5,19 @@ import 'core/auth/auth_provider.dart';
 import 'core/api/api_service.dart';
 import 'core/database/database_service.dart';
 import 'core/sync/sync_service.dart';
+import 'core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize services
+  await NotificationService().init();
   final databaseService = DatabaseService();
   await databaseService.init();
-  
+
   final apiService = ApiService();
   final syncService = SyncService(apiService, databaseService);
-  
+
   runApp(
     MultiProvider(
       providers: [

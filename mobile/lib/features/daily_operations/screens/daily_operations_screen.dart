@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/database/database_service.dart';
+import '../../../core/services/notification_service.dart';
 import 'package:uuid/uuid.dart';
 
 class DailyOperationsScreen extends StatefulWidget {
@@ -46,8 +47,54 @@ class _DailyOperationsScreenState extends State<DailyOperationsScreen> {
         _steps = steps;
         _loading = false;
       });
+
+      _scheduleReminders(logs, steps);
     } catch (e) {
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _scheduleReminders(
+    List<dynamic> logs,
+    List<dynamic> steps,
+  ) async {
+    final notificationService = NotificationService();
+    // Cancel existing to avoid duplicates
+    await notificationService.cancelAll();
+
+    for (final log in logs) {
+      if (log['status'] != 'pending') continue;
+
+      final plannedStartStr = log['planned_start'];
+      if (plannedStartStr == null) continue;
+
+      final plannedStart = DateTime.parse(plannedStartStr);
+      final now = DateTime.now();
+
+      // If it's in the past, don't schedule
+      if (plannedStart.isBefore(now)) continue;
+
+      // Find step details
+      final step = steps.firstWhere(
+        (s) => s['id'] == log['step_id'],
+        orElse: () => null,
+      );
+
+      if (step == null) continue;
+
+      // Schedule 10 mins before
+      final scheduledTime = plannedStart.subtract(const Duration(minutes: 10));
+
+      if (scheduledTime.isAfter(now)) {
+        // Create a unique ID from the log ID (hashCode is simple but might collide, strict app would use int map)
+        // For MVP, hashCode of string UUID is okay-ish.
+        await notificationService.scheduleNotification(
+          id: log['id'].hashCode,
+          title: 'Upcoming Task: ${step['name']}',
+          body: 'Starts at ${DateFormat('HH:mm').format(plannedStart)}',
+          scheduledDate: scheduledTime,
+        );
+      }
     }
   }
 

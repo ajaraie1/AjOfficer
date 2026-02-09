@@ -133,25 +133,49 @@ async def generate_daily_logs(db: AsyncSession, user_id: str, execution_date: da
     existing_logs = await get_logs_by_date(db, user_id, execution_date)
     existing_step_ids = {log.step_id for log in existing_logs}
     
+    # Smart Scheduling Logic
+    # Start at 08:00 AM
+    current_time = datetime.combine(execution_date, datetime.min.time()).replace(hour=8, minute=0)
+    
+    # If we already have logs for today, we should probably start AFTER the last one
+    # But for MVP, let's just schedule new ones starting at 8am or next available slot.
+    # A simple approach: specific sequence
+    
     new_logs = []
+    
+    # Sort steps by sequence order to ensure logical flow
+    active_steps.sort(key=lambda s: s.sequence_order)
+    
+    from datetime import timedelta
+    
     for step in active_steps:
         # Check if log already exists
         if step.id in existing_step_ids:
+            # If it exists, we might want to update our "current_time" pointer 
+            # so subsequent tasks don't overlap, but let's keep it simple for now.
+            # We assume existing logs effectively "occupy" time.
+            # We'll just advance current_time by the estimated duration of this step + buffer
+            # so that NEW steps get scheduled after.
+            duration = step.estimated_duration_minutes or 30
+            current_time += timedelta(minutes=duration + 15)
             continue
             
-        # Check frequency (Simple logic: if Daily, create. If others, we might need more logic later)
-        # For MVP, we assume "Active" means "Do it today" based on the `get_active_steps_for_today` logic.
+        # Create new log with Smart Time
+        duration = step.estimated_duration_minutes or 30 # Default 30 mins
         
-        # Create new log
         new_log = DailyLogModel(
             step_id=step.id,
             user_id=user_id,
             execution_date=execution_date,
             status=ExecutionStatus.PENDING,
-            planned_start=datetime.combine(execution_date, datetime.min.time()).replace(hour=9) # Default 9 AM
+            planned_start=current_time
         )
         db.add(new_log)
         new_logs.append(new_log)
+        
+        # Advance time for next task
+        # Add duration + 15 mins buffer/break
+        current_time += timedelta(minutes=duration + 15)
     
     if new_logs:
         await db.flush()
