@@ -114,3 +114,48 @@ async def get_logs_in_range(
         .order_by(DailyLogModel.execution_date, DailyLogModel.created_at)
     )
     return result.scalars().all()
+
+
+async def generate_daily_logs(db: AsyncSession, user_id: str, execution_date: date) -> List[DailyLogModel]:
+    """
+    Smart Logic: Automatically generate daily logs for all active process steps.
+    Only creates logs if they don't already exist for the given date.
+    """
+    # 1. Get all active steps for the user
+    # We need to import here to avoid circular imports if possible, 
+    # or rely on the fact that python modules are cached.
+    # Better yet, let's use the service function we know exists.
+    from app.modules.process_design import service as process_service
+    
+    active_steps = await process_service.get_active_steps_for_today(db, user_id)
+    
+    # 2. Get existing logs for this date to avoid duplicates
+    existing_logs = await get_logs_by_date(db, user_id, execution_date)
+    existing_step_ids = {log.step_id for log in existing_logs}
+    
+    new_logs = []
+    for step in active_steps:
+        # Check if log already exists
+        if step.id in existing_step_ids:
+            continue
+            
+        # Check frequency (Simple logic: if Daily, create. If others, we might need more logic later)
+        # For MVP, we assume "Active" means "Do it today" based on the `get_active_steps_for_today` logic.
+        
+        # Create new log
+        new_log = DailyLogModel(
+            step_id=step.id,
+            user_id=user_id,
+            execution_date=execution_date,
+            status=ExecutionStatus.PENDING,
+            planned_start=datetime.combine(execution_date, datetime.min.time()).replace(hour=9) # Default 9 AM
+        )
+        db.add(new_log)
+        new_logs.append(new_log)
+    
+    if new_logs:
+        await db.flush()
+        
+    # Return all logs (existing + new)
+    # Re-fetch to ensure everything is clean and ordered
+    return await get_logs_by_date(db, user_id, execution_date)

@@ -21,6 +21,9 @@ async def list_logs(
     db: AsyncSession = Depends(get_db)
 ):
     """Get all daily logs for a specific date."""
+    # Smart Logic: Generate logs for active steps if they don't exist
+    await service.generate_daily_logs(db, user_id, execution_date)
+    
     logs = await service.get_logs_by_date(db, user_id, execution_date)
     return logs
 
