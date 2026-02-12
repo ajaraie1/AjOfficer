@@ -83,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Management Control System',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -191,9 +191,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Submit Button
                             ElevatedButton(
-                              onPressed: authProvider.isLoading
-                                  ? null
-                                  : _submit,
+                              onPressed:
+                                  authProvider.isLoading ? null : _submit,
                               child: authProvider.isLoading
                                   ? const SizedBox(
                                       height: 20,

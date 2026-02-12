@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/database/database_service.dart';
+import 'package:igams_mobile/core/services/notification_service.dart';
 import 'package:uuid/uuid.dart';
 
 class DailyOperationsScreen extends StatefulWidget {
@@ -21,7 +22,12 @@ class _DailyOperationsScreenState extends State<DailyOperationsScreen> {
   @override
   void initState() {
     super.initState();
+    _requestPermissions();
     _loadData();
+  }
+
+  Future<void> _requestPermissions() async {
+    await NotificationService().requestPermissions();
   }
 
   Future<void> _loadData() async {
@@ -162,6 +168,44 @@ class _DailyOperationsScreenState extends State<DailyOperationsScreen> {
     );
   }
 
+  Future<void> _updateTime(
+    Map<String, dynamic> log,
+    Map<String, dynamic> step,
+  ) async {
+    final currentStart = log['planned_start'] != null
+        ? DateTime.parse(log['planned_start'])
+        : DateTime(
+            _selectedDate.year,
+            _selectedDate.month,
+            _selectedDate.day,
+            9,
+            0,
+          ); // Default to 9 AM
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(currentStart),
+    );
+
+    if (time != null) {
+      final newStart = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        time.hour,
+        time.minute,
+      );
+
+      final db = context.read<DatabaseService>();
+      final updatedLog = {...log, 'planned_start': newStart.toIso8601String()};
+
+      await db.saveDailyLog(updatedLog);
+
+      // Update UI and reschedule
+      await _loadData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -278,6 +322,40 @@ class _DailyOperationsScreenState extends State<DailyOperationsScreen> {
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
                                   ),
+                                ),
+                              ],
+                              if (log != null) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.access_time,
+                                      size: 16,
+                                      color: log['planned_start'] != null
+                                          ? Colors.blue
+                                          : Colors.grey,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      log['planned_start'] != null
+                                          ? 'Planned: ${DateFormat('HH:mm').format(DateTime.parse(log['planned_start']))}'
+                                          : 'No time set',
+                                      style: TextStyle(
+                                        color: log['planned_start'] != null
+                                            ? Colors.blue
+                                            : Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, size: 16),
+                                      onPressed: () => _updateTime(log, step),
+                                      constraints: const BoxConstraints(),
+                                      padding: EdgeInsets.zero,
+                                    ),
+                                  ],
                                 ),
                               ],
                               const SizedBox(height: 12),

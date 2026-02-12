@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final results = await Future.wait([
-        api.getDailyMetrics(today).catchError((_) => {}),
+        api.getDailyMetrics(today).catchError((_) => <String, dynamic>{}),
         api.getGoals().catchError((_) => []),
       ]);
 
@@ -181,9 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     )
                   else
-                    ...(_goals
-                        .take(3)
-                        .map(
+                    ...(_goals.take(3).map(
                           (goal) => Card(
                             child: ListTile(
                               leading: const CircleAvatar(

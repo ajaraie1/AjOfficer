@@ -22,8 +22,8 @@ uvicorn app.main:app --reload
 Copy `.env.example` to `.env` and configure:
 
 ```
-DATABASE_URL=postgresql://user:password@localhost:5432/igams
+DATABASE_URL=https://mkdqoylhrjsvmarntzii.supabase.co
 REDIS_URL=redis://localhost:6379
-JWT_SECRET=your-secret-key
-OPENAI_API_KEY=your-openai-key
+JWT_SECRET=your_jwt_secret
+OPENAI_API_KEY=your_supabase_anon_key
 ```
